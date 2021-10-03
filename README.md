@@ -10,6 +10,7 @@ Hardware:
 - Arduino (any)
 - Active buzzer
 - 2 magnetic switches (or any NC contact switches)
+- 1306 OLED Display
 
 Required libraries:
 - adafruit/Adafruit SSD1306@^2.4.6

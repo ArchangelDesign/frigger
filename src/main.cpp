@@ -14,6 +14,7 @@
     - Arduino (any)
     - Active buzzer
     - 2 magnetic switches (or any NC contact switches)
+    - 1306 OLED Display
 
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
     AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
