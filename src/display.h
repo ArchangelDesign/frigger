@@ -73,9 +73,17 @@ void print_to_screen(int x, int y, char *text)
   display.print(text);
 }
 
+void print_to_screen_size(int x, int y, int size, char *text)
+{
+  display.setTextSize(size);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(x, y);
+  display.print(text);
+}
+
 bool fg_refresh_screen(void *) {
     display.clearDisplay();
-    print_home_screen();
+    
     char buf[30];
     if (fridge_door_open || freezer_door_open) {
         if (is_in_testing)
@@ -86,10 +94,15 @@ bool fg_refresh_screen(void *) {
             sprintf(buf, flash_get(f_freezer_door_open));
         else if (freezer_door_open && fridge_door_open)
             sprintf(buf, flash_get(f_both_door_open));
+        print_to_screen(0, 0, buf);
+        sprintf(buf, "%d", current_open_time / 2);
+        int x = current_open_time / 2 > 9 ? 20 : 40;
+        print_to_screen_size(x, 20, 5, buf);
+        display.display();
+        return true;
     }
-    print_to_screen(0, 25, buf);
+    print_home_screen();
     char t[] = "H: %d M: %d S: %d";
-    
     sprintf(buf, t, total_open_hours, total_open_minutes, total_open_seconds / 2);
     print_to_screen(0, 35, buf);
     sprintf(buf, "CURRENT: %d", current_open_time);

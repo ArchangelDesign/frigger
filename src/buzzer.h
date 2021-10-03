@@ -21,7 +21,7 @@
 
 #include <Arduino.h>
 
-#define BUZZER_PIN 13
+#define BUZZER_PIN 3
 
 void buzzer_1_beep()
 {

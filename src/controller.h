@@ -24,7 +24,7 @@
 #include "buzzer.h"
 
 #define PIN_FRIDGE_DOOR 12
-#define PIN_FREEZER_DOOR 11
+#define PIN_FREEZER_DOOR 2
 #define PIN_TEST 10
 #define ADDR_SECONDS 0
 #define ADDR_MINUTES 1
@@ -59,12 +59,17 @@ bool fg_controller_callback(void *) {
     freezer_door_open = digitalRead(PIN_FREEZER_DOOR) == HIGH;
     is_in_testing = digitalRead(PIN_TEST) == LOW;
     if (!fridge_door_open && !freezer_door_open) {
+        if (current_open_time > 0) {
+            Serial.println("CLOSE");
+        }
         current_open_time = 0;
         return true;
     }
     if (fridge_door_open || freezer_door_open) {
-        if (current_open_time < 1)
+        if (current_open_time < 1) {
             buzzer_1_beep();
+            Serial.println("OPEN");
+        }
         total_open_seconds++;
         current_open_time++;
         if (total_open_seconds > 120) {
