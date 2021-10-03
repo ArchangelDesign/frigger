@@ -37,7 +37,7 @@ void buzzer_beep(int times)
     buzzer_1_beep();
 }
 
-void fg_setup_buzzer() {
+void fg_init_buzzer() {
     pinMode(BUZZER_PIN, OUTPUT);
     buzzer_beep(4);
 }

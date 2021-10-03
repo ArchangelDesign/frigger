@@ -40,9 +40,8 @@ Timer<10, millis> system_timer;
 void setup() {
   Serial.begin(9600);
   Serial.println("starting...");
-  init_display();
-  print_home_screen();
-  fg_setup_buzzer();
+  fg_init_display();
+  fg_init_buzzer();
   fg_init_controller();
   system_timer.every(500, fg_controller_callback);
   system_timer.every(321, fg_refresh_screen);
