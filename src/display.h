@@ -36,6 +36,7 @@ const char f_frigger[] PROGMEM = "FRIGGER";
 const char f_fridge_door_open[] PROGMEM = "fridge door open";
 const char f_freezer_door_open[] PROGMEM = "freezer door open";
 const char f_both_door_open[] PROGMEM = "both doors open";
+const char f_done[] PROGMEM = "DONE";
 const unsigned char PROGMEM bmp_dot[] = {
     0b00011000,
     0b00111100,
@@ -90,10 +91,32 @@ void print_to_screen_size(int x, int y, int size, char *text)
   display.print(text);
 }
 
+void print_reset_screen()
+{
+    char buf[30];
+    if (reset_performed) {
+        sprintf(buf, "%s", flash_get(f_done));
+        print_to_screen_size(10, 0, 2, buf);
+        return;
+    }
+    sprintf(buf, "%s", "RESET");
+    print_to_screen_size(10, 0, 2, buf);
+    sprintf(buf, "%d", reset_button_time);
+    print_to_screen_size(20, 20, 3, buf);
+
+}
+
 bool fg_refresh_screen(void *) {
     display.clearDisplay();
-    
+
+    if (is_in_reset) {
+        print_reset_screen();
+        display.display();
+        return true;
+    }
+
     char buf[30];
+    
     if (fridge_door_open || freezer_door_open) {
         if (is_in_testing)
             buzzer_1_beep();
@@ -111,8 +134,7 @@ bool fg_refresh_screen(void *) {
         return true;
     }
     print_home_screen();
-    char t[] = "%d:%d:%d";
-    sprintf(buf, t, total_open_hours, total_open_minutes, total_open_seconds / 2);
+    sprintf(buf, "%d:%d:%d", fg_get_open_hours(), total_open_minutes, total_open_seconds / 2);
     print_to_screen_size(0, 35, 2, buf);
     display.display();
     return true;

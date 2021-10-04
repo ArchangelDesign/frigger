@@ -26,38 +26,86 @@
 #define PIN_FRIDGE_DOOR 12
 #define PIN_FREEZER_DOOR 2
 #define PIN_TEST 10
+#define PIN_RESET 4
+#define RESET_TIME 10
 #define ADDR_SECONDS 0
 #define ADDR_MINUTES 1
 #define ADDR_HOURS 2
-#define MAX_OPEN_TIME 60
+#define ADDR_HOURS_MULTIPLIER 3
+// Main alarm trigger
+#define MAX_OPEN_TIME 90 // 45 seconds
+// no sound period
+#define QUIET_TIME 30 // 15 seconds
+// quiet alarm trigger
+#define QUIET_ALARM_TIME 60 // 30 seconds
+// turn off main alarm
+#define MAX_ALARM_TIME 140 // 70 seconds
 
 bool fridge_door_open = false;
 bool freezer_door_open = false;
 bool is_in_testing = false;
+bool is_in_reset = false;
+bool reset_performed = false;
+uint8_t reset_button_time = 0;
 uint8_t total_open_hours = 0;
 uint8_t total_open_minutes = 0;
 uint8_t total_open_seconds = 0;
+uint8_t total_open_hours_multiplier = 1;
 uint16_t current_open_time = 0;
+
+void fg_load_counters()
+{
+    total_open_hours = rom_read(ADDR_HOURS);
+    total_open_minutes = rom_read(ADDR_MINUTES);
+    total_open_seconds = rom_read(ADDR_SECONDS);
+    total_open_hours_multiplier = rom_read(ADDR_HOURS_MULTIPLIER);
+}
+
+void fg_reset_counters()
+{
+    rom_store(ADDR_HOURS, 0);
+    rom_store(ADDR_MINUTES, 0);
+    rom_store(ADDR_SECONDS, 0);
+    rom_store(ADDR_HOURS_MULTIPLIER, 0);
+    total_open_hours_multiplier = 0;
+    total_open_hours = 0;
+    total_open_minutes = 0;
+    total_open_seconds = 0;
+}
 
 void fg_init_controller() {
     pinMode(PIN_FRIDGE_DOOR, INPUT_PULLUP);
     pinMode(PIN_FREEZER_DOOR, INPUT_PULLUP);
     pinMode(PIN_TEST, INPUT_PULLUP);
-    // rom_store(ADDR_HOURS, 0);
-    // rom_store(ADDR_MINUTES, 0);
-    // rom_store(ADDR_SECONDS, 0);
-    total_open_hours = rom_read(ADDR_HOURS);
-    total_open_minutes = rom_read(ADDR_MINUTES);
-    total_open_seconds = rom_read(ADDR_SECONDS);
+    pinMode(PIN_RESET, INPUT_PULLUP);
+    fg_load_counters();
+}
+
+uint16_t fg_get_open_hours()
+{
+    return total_open_hours + (256 * total_open_hours_multiplier);
 }
 
 /**
  * Invoked every 500ms
  */
 bool fg_controller_callback(void *) {
+    is_in_reset = digitalRead(PIN_RESET) == LOW;
     fridge_door_open = digitalRead(PIN_FRIDGE_DOOR) == HIGH;
     freezer_door_open = digitalRead(PIN_FREEZER_DOOR) == HIGH;
     is_in_testing = digitalRead(PIN_TEST) == LOW;
+    if (is_in_reset) {
+        reset_button_time++;
+        if (reset_button_time > RESET_TIME) {
+            fg_reset_counters();
+            reset_performed = true;
+            buzzer_beep(7);
+        }
+    } else {
+        reset_button_time = 0;
+        reset_performed = false;
+    }
+    
     if (!fridge_door_open && !freezer_door_open) {
         if (current_open_time > 0) {
             Serial.println("CLOSE");
@@ -65,28 +113,33 @@ bool fg_controller_callback(void *) {
         current_open_time = 0;
         return true;
     }
-    if (fridge_door_open || freezer_door_open) {
-        if (current_open_time < 1) {
-            buzzer_1_beep();
-            Serial.println("OPEN");
-        }
-        total_open_seconds++;
-        current_open_time++;
-        if (total_open_seconds > 120) {
-            total_open_seconds = 0;
-            total_open_minutes++;
-        }
-        if (total_open_minutes > 59) {
-            total_open_hours++;
-            total_open_minutes = 0;
-        }
-        rom_store(ADDR_HOURS, total_open_hours);
-        rom_store(ADDR_MINUTES, total_open_minutes);
-        rom_store(ADDR_SECONDS, total_open_seconds);
+    
+    if (current_open_time < 1) {
+        buzzer_1_beep();
+        Serial.println("OPEN");
+    }
+    if (current_open_time > QUIET_TIME) {
+        buzzer_short_beep();
+    }
+    if (current_open_time > QUIET_ALARM_TIME && (current_open_time < MAX_OPEN_TIME || current_open_time > MAX_ALARM_TIME)) {
+        buzzer_short_beeps(5);
+    }
+    total_open_seconds++;
+    current_open_time++;
+    if (total_open_seconds > 120) {
+        total_open_seconds = 0;
+        total_open_minutes++;
+    }
+    if (total_open_minutes > 59) {
+        total_open_hours++;
+        total_open_minutes = 0;
+    }
+    rom_store(ADDR_HOURS, total_open_hours);
+    rom_store(ADDR_MINUTES, total_open_minutes);
+    rom_store(ADDR_SECONDS, total_open_seconds);
 
-        if (current_open_time > MAX_OPEN_TIME) {
-            buzzer_beep(3);
-        }
+    if (current_open_time > MAX_OPEN_TIME && current_open_time < MAX_ALARM_TIME) {
+        buzzer_beep(3);
     }
     
     return true;
