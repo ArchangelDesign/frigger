@@ -33,10 +33,18 @@
 #define SCREEN_ADDRESS 0x3C
 
 const char f_frigger[] PROGMEM = "FRIGGER";
-const char f_dashes[] PROGMEM = "--------------------";
 const char f_fridge_door_open[] PROGMEM = "fridge door open";
 const char f_freezer_door_open[] PROGMEM = "freezer door open";
 const char f_both_door_open[] PROGMEM = "both doors open";
+const unsigned char PROGMEM bmp_dot[] = {
+    0b00011000,
+    0b00111100,
+    0b01111110,
+    0b11111111,
+    0b01111110,
+    0b00111100,
+    0b00011000
+};
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET_PIN);
 
@@ -57,12 +65,13 @@ void print_home_screen()
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0,0);
+  display.setCursor(23, 0);
   display.setTextColor(SSD1306_WHITE);
   display.println(flash_get(f_frigger));
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.println(flash_get(f_dashes));
+  display.drawLine(0, 20, 128, 20, SSD1306_WHITE);
+  display.drawLine(0, 21, 128, 21, SSD1306_WHITE);
+  display.drawBitmap(0, 3, bmp_dot, 8, 7, SSD1306_WHITE);
+  display.drawBitmap(120, 3, bmp_dot, 8, 7, SSD1306_WHITE);
 }
 
 void print_to_screen(int x, int y, char *text)
@@ -102,11 +111,9 @@ bool fg_refresh_screen(void *) {
         return true;
     }
     print_home_screen();
-    char t[] = "H: %d M: %d S: %d";
+    char t[] = "%d:%d:%d";
     sprintf(buf, t, total_open_hours, total_open_minutes, total_open_seconds / 2);
-    print_to_screen(0, 35, buf);
-    sprintf(buf, "CURRENT: %d", current_open_time);
-    print_to_screen(0, 45, buf);
+    print_to_screen_size(0, 35, 2, buf);
     display.display();
     return true;
 }
