@@ -12,6 +12,7 @@ Connect `PIN_RESET` to ground to reset the counter.
 
 
 ### Configure:
+```
 // Main alarm trigger
 #define MAX_OPEN_TIME 90 // 45 seconds
 // no sound period
@@ -20,6 +21,7 @@ Connect `PIN_RESET` to ground to reset the counter.
 #define QUIET_ALARM_TIME 60 // 30 seconds
 // turn off main alarm
 #define MAX_ALARM_TIME 140 // 70 seconds
+```
 
 ### Hardware:
 - Arduino (any)
