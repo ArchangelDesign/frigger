@@ -24,7 +24,7 @@
 #include "buzzer.h"
 
 #define PIN_FRIDGE_DOOR 12
-#define PIN_FREEZER_DOOR 2
+#define PIN_FREEZER_DOOR 11
 #define PIN_TEST 10
 #define PIN_RESET 7
 #define RESET_TIME 10
