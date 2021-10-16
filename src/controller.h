@@ -26,7 +26,7 @@
 #define PIN_FRIDGE_DOOR 12
 #define PIN_FREEZER_DOOR 2
 #define PIN_TEST 10
-#define PIN_RESET 4
+#define PIN_RESET 7
 #define RESET_TIME 10
 #define ADDR_SECONDS 0
 #define ADDR_MINUTES 1
@@ -46,6 +46,8 @@ bool freezer_door_open = false;
 bool is_in_testing = false;
 bool is_in_reset = false;
 bool reset_performed = false;
+bool pre_alarm_active = false;
+bool loud_alarm_active = false;
 uint8_t reset_button_time = 0;
 uint8_t total_open_hours = 0;
 uint8_t total_open_minutes = 0;
@@ -109,20 +111,20 @@ bool fg_controller_callback(void *) {
     if (!fridge_door_open && !freezer_door_open) {
         if (current_open_time > 0) {
             Serial.println("CLOSE");
+            buzzer_short_beeps(3);
         }
+        pre_alarm_active = false;
+        loud_alarm_active = false;
         current_open_time = 0;
         return true;
     }
     
     if (current_open_time < 1) {
-        buzzer_1_beep();
+        buzzer_short_beeps(5);
         Serial.println("OPEN");
     }
     if (current_open_time > QUIET_TIME) {
-        buzzer_short_beep();
-    }
-    if (current_open_time > QUIET_ALARM_TIME && (current_open_time < MAX_OPEN_TIME || current_open_time > MAX_ALARM_TIME)) {
-        buzzer_short_beeps(5);
+        pre_alarm_active = true;
     }
     total_open_seconds++;
     current_open_time++;
@@ -139,9 +141,21 @@ bool fg_controller_callback(void *) {
     rom_store(ADDR_SECONDS, total_open_seconds);
 
     if (current_open_time > MAX_OPEN_TIME && current_open_time < MAX_ALARM_TIME) {
-        buzzer_beep(3);
+        loud_alarm_active = true;
     }
     
+    return true;
+}
+
+bool fg_alarm_timer(void*)
+{
+    if (loud_alarm_active) {
+        buzzer_short_beeps(25);
+        buzzer_beep(1);
+    }
+    if (pre_alarm_active) {
+        buzzer_short_beeps(5);
+    }
     return true;
 }
 

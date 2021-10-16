@@ -45,6 +45,7 @@ void setup() {
   fg_init_controller();
   system_timer.every(500, fg_controller_callback);
   system_timer.every(321, fg_refresh_screen);
+  system_timer.every(2000, fg_alarm_timer);
 }
 
 void loop() {

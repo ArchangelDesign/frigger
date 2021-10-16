@@ -21,14 +21,14 @@
 
 #include <Arduino.h>
 
-#define BUZZER_PIN 3
+#define BUZZER_PIN 2
 
 void buzzer_1_beep()
 {
   digitalWrite(BUZZER_PIN, HIGH);
-  delay(50);
+  delay(30);
   digitalWrite(BUZZER_PIN, LOW);
-  delay(50);
+  delay(30);
 }
 
 void buzzer_short_beep()

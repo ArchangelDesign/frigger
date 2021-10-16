@@ -130,6 +130,8 @@ bool fg_refresh_screen(void *) {
         sprintf(buf, "%d", current_open_time / 2);
         int x = current_open_time / 2 > 9 ? 20 : 40;
         print_to_screen_size(x, 20, 5, buf);
+        sprintf(buf, "%s", pre_alarm_active ? "PA" : ".");
+        print_to_screen_size(0, 30, 2, buf);
         display.display();
         return true;
     }
